@@ -1,13 +1,38 @@
 pipeline {
     agent any
+    tools {
+        maven 'maven'
+        jdk 'JAVA_HOME'
+    }
     parameters {
         gitParameter branchFilter: 'origin/(.*)', defaultValue: 'master', name: 'BRANCH', type: 'PT_BRANCH'
     }
     stages {
-        stage ('test') {
+        stage ('checkout') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '${params.BRANCH}']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/nagadevops2016/maven-tomcat-.git']]])
+                checkout([$class: 'GitSCM', branches: [[name: '${BRANCH}']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs:  [[url: 'https://github.com/nagadevops2016/maven-tomcat-.git']]])
             }
         }
+        stage ('build') {
+            steps {
+                bat 'mvn -Dmaven.test.failure.ignore=true install'
+            }
+        }
+        stage ('deploy') {
+            steps {
+                bat 'mvn clean deploy'
+            }
+        }
+        stage ('soanr code') {
+            steps {
+                    def mvnHome = tool 'Maven'
+                    withSonarQubeEnv {
+
+                        sh "'${mvnHome}/bin/mvn'  verify sonar:sonar -Dintegration-tests.skip=true -Dmaven.test.failure.ignore=true"
+                    }
+                }
+            }
+        }
+          
+        }
     }
-}
