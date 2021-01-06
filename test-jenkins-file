@@ -1,0 +1,13 @@
+pipeline {
+    agent any
+    parameters {
+        gitParameter branchFilter: 'origin/(.*)', defaultValue: 'master', name: 'BRANCH', type: 'PT_BRANCH'
+    }
+    stages {
+        stage ('test') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '${params.BRANCH}']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/nagadevops2016/maven-tomcat-.git']]])
+            }
+        }
+    }
+}
